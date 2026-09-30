@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Security Center{% endblock %}
+{% block header_title %}Cybersecurity & Threat Monitoring Center{% endblock %}
+
+{% block content %}
+<!-- Security Status Cards Grid -->
+<div class="grid-4">
+  <div class="glass-card stat-card">
+    <div class="stat-info">
+      <h3>Identity Security</h3>
+      <div class="stat-value" style="font-size: 1.4rem; color: #10b981;">ACTIVE</div>
+      <span class="badge badge-verified" style="margin-top: 0.5rem;">DID Proof Active</span>
+    </div>
+    <div class="stat-icon" style="color: #10b981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+      <i class="fas fa-id-card-clip"></i>
+    </div>
+  </div>
+
+  <div class="glass-card stat-card">
+    <div class="stat-info">
+      <h3>Role-Based Access</h3>
+      <div class="stat-value" style="font-size: 1.4rem; color: #06b6d4;">ENFORCED</div>
+      <span class="badge badge-cyan" style="margin-top: 0.5rem;">Backend RBAC Active</span>
+    </div>
+    <div class="stat-icon">
+      <i class="fas fa-shield-virus"></i>
+    </div>
+  </div>
+
+  <div class="glass-card stat-card">
+    <div class="stat-info">
+      <h3>Audit Integrity</h3>
+      <div class="stat-value" style="font-size: 1.4rem; color: #10b981;">VERIFIED</div>
+      <span class="badge badge-verified" style="margin-top: 0.5rem;">SHA-256 Valid</span>
+    </div>
+    <div class="stat-icon" style="color: #10b981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+      <i class="fas fa-link"></i>
+    </div>
+  </div>
+
+  <div class="glass-card stat-card" style="border-color: rgba(239, 68, 68, 0.3);">
+    <div class="stat-info">
+      <h3>Unauthorized Attempts</h3>
+      <div class="stat-value" style="color: #ef4444;">{{ unauthorized_attempts }}</div>
+      <span class="badge badge-danger" style="margin-top: 0.5rem;">Blocked & Logged</span>
+    </div>
+    <div class="stat-icon" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1);">
+      <i class="fas fa-triangle-exclamation"></i>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Security Event Timeline -->
+  <div class="glass-card">
+    <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">
+      <i class="fas fa-clock-rotate-left" style="color: var(--primary-cyan);"></i> Security Activity Stream
+    </h3>
+
+    <div class="timeline">
+      {% for event in recent_security_events %}
+      <div class="timeline-item">
+        <div class="timeline-dot" style="{% if 'UNAUTHORIZED' in event.action or event.status == 'DENIED' %}background: #ef4444; box-shadow: 0 0 10px #ef4444;{% endif %}"></div>
+        <div class="timeline-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <strong style="color: #fff; font-size: 0.88rem;">{{ event.user }} ({{ event.role }})</strong>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">{{ event.timestamp[11:19] }}</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">
+            Action: <span class="font-mono" style="color: #fff;">{{ event.action }}</span> | Resource: {{ event.resource }}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Blocked Unauthorized Access Attempts Table -->
+  <div class="glass-card">
+    <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">
+      <i class="fas fa-ban" style="color: #ef4444;"></i> Logged Unauthorized Access Violations
+    </h3>
+
+    <div class="table-responsive">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>User</th>
+            <th>Attempted Resource</th>
+            <th>Action Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in unauthorized_logs %}
+          <tr>
+            <td style="font-size: 0.78rem; color: var(--text-muted);">{{ log.timestamp }}</td>
+            <td><strong>{{ log.user }}</strong> ({{ log.role }})</td>
+            <td style="font-size: 0.8rem; max-width: 180px; word-break: break-word;">{{ log.resource }}</td>
+            <td><span class="badge badge-danger">BLOCKED / DENIED</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

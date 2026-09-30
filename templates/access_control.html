@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Access Control (RBAC){% endblock %}
+{% block header_title %}Role-Based Access Control (RBAC){% endblock %}
+
+{% block content %}
+<!-- Role Definition & Permission Matrix -->
+<div class="glass-card">
+  <h2 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 0.5rem;">Role Permission Matrix</h2>
+  <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+    Strict server-side enforcement of organizational roles and privilege boundaries.
+  </p>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Capabilities & Privileges</th>
+          <th>Backend Enforcement Level</th>
+          <th>Current Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-danger" style="font-size: 0.85rem;"><i class="fas fa-user-gear"></i> ADMIN</span></td>
+          <td>Full system access, manage identities, mint assets, assign user roles, approve access requests, view audit logs, verify hash chain.</td>
+          <td><span class="font-mono text-cyan">UNRESTRICTED</span></td>
+          <td><span class="badge badge-verified">ENFORCED</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-warning" style="font-size: 0.85rem;"><i class="fas fa-user-tie"></i> MANAGER</span></td>
+          <td>Mint assets, view identities, review access requests, request asset access, view security metrics.</td>
+          <td><span class="font-mono" style="color: #f59e0b;">RESTRICTED_ADMIN_ROUTES</span></td>
+          <td><span class="badge badge-verified">ENFORCED</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-cyan" style="font-size: 0.85rem;"><i class="fas fa-clipboard-check"></i> AUDITOR</span></td>
+          <td>View audit logs, verify hash-chain integrity, inspect identities, view asset ownership history. Read-only audit privileges.</td>
+          <td><span class="font-mono" style="color: #38bdf8;">READ_ONLY_AUDIT</span></td>
+          <td><span class="badge badge-verified">ENFORCED</span></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-secondary" style="font-size: 0.85rem; border: 1px solid var(--border-color);"><i class="fas fa-user"></i> USER</span></td>
+          <td>View own identity, view owned assets, submit access requests. Cannot access admin panel, assign roles, or approve requests.</td>
+          <td><span class="font-mono" style="color: #ef4444;">STRICT_BASIC</span></td>
+          <td><span class="badge badge-verified">ENFORCED</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Interactive Access Restriction Test Box -->
+<div class="glass-card" style="margin-top: 1.5rem; border-color: rgba(239, 68, 68, 0.25);">
+  <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 0.5rem;">
+    <i class="fas fa-shield-cat" style="color: #ef4444;"></i> Test RBAC Backend Enforcement
+  </h3>
+  <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+    Clicking the button below attempts to call the protected <code>/admin/demo-restricted</code> route. If logged in as a non-Admin (e.g. Manager, Auditor, or User), the backend Flask server will block the request, log an <code>UNAUTHORIZED_ACCESS</code> audit event, and display the official <strong>ACCESS DENIED</strong> response.
+  </p>
+
+  <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+    <a href="{{ url_for('demo_restricted') }}" class="btn btn-danger">
+      <i class="fas fa-lock"></i> Test Admin Protected Action
+    </a>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">
+      Your current active role: <strong style="color: var(--primary-cyan);">{{ current_role }}</strong>
+    </span>
+  </div>
+</div>
+
+<!-- Active Users Role List -->
+<div class="glass-card" style="margin-top: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+    <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff;">Registered Users & Assigned Roles</h3>
+    {% if current_role == 'Admin' %}
+    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary btn-sm">
+      <i class="fas fa-user-gear"></i> Manage Roles in Admin Panel
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Assigned Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>#{{ u.id }}</td>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>{{ u.full_name }}</td>
+          <td style="color: var(--text-muted);">{{ u.email }}</td>
+          <td>
+            {% if u.role == 'Admin' %}
+              <span class="badge badge-danger"><i class="fas fa-user-gear"></i> Admin</span>
+            {% elif u.role == 'Manager' %}
+              <span class="badge badge-warning"><i class="fas fa-user-tie"></i> Manager</span>
+            {% elif u.role == 'Auditor' %}
+              <span class="badge badge-cyan"><i class="fas fa-clipboard-check"></i> Auditor</span>
+            {% else %}
+              <span class="badge badge-secondary" style="border: 1px solid var(--border-color);"><i class="fas fa-user"></i> User</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

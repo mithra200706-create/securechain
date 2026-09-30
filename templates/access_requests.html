@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Access Requests{% endblock %}
+{% block header_title %}Asset Access Requests & Governance{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.2rem; font-weight: 600; color: #fff;">Asset Access Requests Ledger</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Request permissions to inspect, edit, or transfer digital asset NFTs.</p>
+    </div>
+    
+    <div>
+      <button class="btn btn-primary" onclick="openModal('request-access-modal')">
+        <i class="fas fa-key"></i> Submit Access Request
+      </button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Req ID</th>
+          <th>Requester</th>
+          <th>Asset NFT ID & Name</th>
+          <th>Permission</th>
+          <th>Justification Reason</th>
+          <th>Status</th>
+          <th>Reviewer</th>
+          {% if current_role in ['Admin', 'Manager'] %}
+          <th>Governance Actions</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+        <tr>
+          <td>#{{ req.id }}</td>
+          <td><strong>{{ req.username }}</strong></td>
+          <td>
+            <span class="font-mono text-cyan" style="color: var(--primary-cyan); font-weight: 600;">{{ req.asset_nft_id }}</span><br>
+            <small style="color: var(--text-muted);">{{ req.asset_name }}</small>
+          </td>
+          <td><span class="badge badge-cyan">{{ req.permission_requested }}</span></td>
+          <td style="font-size: 0.85rem; color: var(--text-muted); max-width: 240px;">{{ req.reason }}</td>
+          <td>
+            {% if req.status == 'Approved' %}
+              <span class="badge badge-approved"><i class="fas fa-check"></i> Approved</span>
+            {% elif req.status == 'Rejected' %}
+              <span class="badge badge-rejected"><i class="fas fa-times"></i> Rejected</span>
+            {% else %}
+              <span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 0.82rem;">{{ req.reviewed_by or '—' }}</td>
+
+          {% if current_role in ['Admin', 'Manager'] %}
+          <td>
+            {% if req.status == 'Pending' %}
+            <div style="display: flex; gap: 0.35rem;">
+              <form action="{{ url_for('handle_access_request', req_id=req.id) }}" method="POST" style="display: inline;">
+                <input type="hidden" name="action_type" value="Approve">
+                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Approve</button>
+              </form>
+              <form action="{{ url_for('handle_access_request', req_id=req.id) }}" method="POST" style="display: inline;">
+                <input type="hidden" name="action_type" value="Reject">
+                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Reject</button>
+              </form>
+            </div>
+            {% else %}
+              <span style="font-size: 0.78rem; color: var(--text-dim);">Processed</span>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Request Access -->
+<div class="modal-backdrop" id="request-access-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-key" style="color: var(--primary-cyan);"></i> Request Asset Permission</h3>
+      <button class="modal-close" onclick="closeModal('request-access-modal')">&times;</button>
+    </div>
+    
+    <form action="{{ url_for('create_access_request') }}" method="POST">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="asset_nft_id">Target Digital Asset</label>
+          <select id="asset_nft_id" name="asset_nft_id" class="form-select" required>
+            {% for asset in assets %}
+            <option value="{{ asset.nft_id }}">{{ asset.nft_id }} - {{ asset.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="permission">Requested Permission</label>
+          <select id="permission" name="permission" class="form-select">
+            <option value="View">View / Read Access</option>
+            <option value="Edit">Edit / Modify Access</option>
+            <option value="Transfer">Ownership Transfer Request</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="reason">Justification & Business Reason</label>
+          <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Provide reason for access..." required></textarea>
+        </div>
+      </div>
+
+      <div style="padding: 1rem 1.5rem; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('request-access-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

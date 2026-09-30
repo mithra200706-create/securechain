@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Trail (SHA-256 Chain){% endblock %}
+{% block header_title %}Tamper-Evident SHA-256 Audit Trail Ledger{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.2rem; font-weight: 600; color: #fff;">Immutable Audit Ledger</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Every security event is cryptographically linked to the previous block via SHA-256 hashing.
+      </p>
+    </div>
+    
+    <div>
+      <button class="btn btn-primary" id="verify-audit-btn">
+        <i class="fas fa-shield-halved"></i> Verify Audit Chain
+      </button>
+    </div>
+  </div>
+
+  <!-- Verification Result Display Container -->
+  <div id="audit-verification-result">
+    {% if verification.valid %}
+    <div class="alert alert-success">
+      <i class="fas fa-check-circle" style="font-size: 1.2rem;"></i>
+      <div>
+        <strong>✓ Audit Chain Integrity: VERIFIED</strong><br>
+        <small>{{ verification.message }}</small>
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-danger">
+      <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem;"></i>
+      <div>
+        <strong>✗ Audit Chain Integrity COMPROMISED!</strong><br>
+        <small>{{ verification.message }}</small>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Hash Chain Explanation Card -->
+  <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 1rem; margin-bottom: 1.5rem;">
+    <h4 style="font-size: 0.85rem; color: var(--primary-cyan); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+      <i class="fas fa-link"></i> Cryptographic Block Hashing Formula
+    </h4>
+    <p class="font-mono" style="font-size: 0.78rem; color: var(--text-muted);">
+      Current Hash = SHA256( Previous_Hash + Timestamp + User + Role + Action + Resource + Status + Tx_Hash )
+    </p>
+  </div>
+
+  <!-- Audit Logs Table -->
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Block #</th>
+          <th>Timestamp</th>
+          <th>User & Role</th>
+          <th>Action Event</th>
+          <th>Resource</th>
+          <th>Status</th>
+          <th>Previous Block Hash</th>
+          <th>Current SHA-256 Hash</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in audit_logs %}
+        <tr>
+          <td><span class="font-mono" style="color: var(--primary-cyan); font-weight: 700;">#{{ log.id }}</span></td>
+          <td style="font-size: 0.78rem; color: var(--text-muted);">{{ log.timestamp }}</td>
+          <td>
+            <strong>{{ log.user }}</strong><br>
+            <small style="color: var(--text-dim);">{{ log.role }}</small>
+          </td>
+          <td>
+            {% if 'UNAUTHORIZED' in log.action or 'DENIED' in log.status %}
+              <span class="badge badge-danger font-mono">{{ log.action }}</span>
+            {% elif 'CREATED' in log.action or 'MINTED' in log.action %}
+              <span class="badge badge-success font-mono">{{ log.action }}</span>
+            {% else %}
+              <span class="badge badge-cyan font-mono">{{ log.action }}</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 0.82rem; max-width: 200px; word-break: break-word;">{{ log.resource }}</td>
+          <td>
+            {% if log.status == 'SUCCESS' %}
+              <span class="badge badge-success">SUCCESS</span>
+            {% else %}
+              <span class="badge badge-danger">DENIED</span>
+            {% endif %}
+          </td>
+          <td>
+            <code class="font-mono" style="font-size: 0.7rem; color: var(--text-dim);" title="{{ log.prev_hash }}">
+              {{ log.prev_hash[:12] }}...
+            </code>
+          </td>
+          <td>
+            <code class="font-mono" style="font-size: 0.72rem; color: #34d399; font-weight: 600;" title="{{ log.hash }}">
+              {{ log.hash[:16] }}...
+            </code>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

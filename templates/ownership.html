@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Ownership History{% endblock %}
+{% block header_title %}Asset Ownership Ledger & Provenance Timeline{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 1.5rem;">
+  <form action="{{ url_for('ownership') }}" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+      <label for="nft_id"><i class="fas fa-search"></i> Select Asset to View Provenance & Transfer History</label>
+      <select id="nft_id" name="nft_id" class="form-select" onchange="this.form.submit()">
+        {% for a in assets %}
+        <option value="{{ a.nft_id }}" {% if a.nft_id == selected_nft_id %}selected{% endif %}>
+          {{ a.nft_id }} — {{ a.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Load History</button>
+  </form>
+</div>
+
+{% if selected_asset %}
+<div class="grid-2">
+  <!-- Asset Summary Card -->
+  <div class="glass-card">
+    <h3 style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">
+      <i class="fas fa-circle-info" style="color: var(--primary-cyan);"></i> Asset Provenance Overview
+    </h3>
+
+    <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-muted);">Asset Name:</span>
+        <strong style="color: #fff;">{{ selected_asset.name }}</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-muted);">NFT Token ID:</span>
+        <span class="font-mono" style="color: var(--primary-cyan); font-weight: 700;">{{ selected_asset.nft_id }}</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-muted);">Current Owner:</span>
+        <span class="badge badge-verified">{{ selected_asset.current_owner }}</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-muted);">Original Creator:</span>
+        <strong style="color: var(--text-main);">{{ selected_asset.original_owner }}</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <span style="color: var(--text-muted);">Asset Category:</span>
+        <span class="badge badge-cyan">{{ selected_asset.asset_type }}</span>
+      </div>
+
+      <div>
+        <span style="color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Minting Transaction Hash:</span>
+        <code class="font-mono" style="font-size: 0.78rem; color: #38bdf8; background: rgba(0,0,0,0.3); padding: 0.4rem; border-radius: 6px; display: block; word-break: break-all;">
+          {{ selected_asset.tx_hash }}
+        </code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visual Timeline -->
+  <div class="glass-card">
+    <h3 style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">
+      <i class="fas fa-timeline" style="color: var(--accent-blue);"></i> Ownership Chain Timeline
+    </h3>
+
+    {% if history %}
+    <div class="timeline">
+      {% for h in history %}
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <strong style="color: #fff; font-size: 0.9rem;">
+              {{ h.previous_owner }} &rarr; <span style="color: var(--primary-cyan);">{{ h.new_owner }}</span>
+            </strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ h.timestamp[:19] }}</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            Transfer verified and recorded on ledger block history.
+          </p>
+          <code class="font-mono" style="font-size: 0.72rem; color: #34d399;">
+            Tx: {{ h.tx_hash[:24] }}...
+          </code>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="font-size: 0.88rem; color: var(--text-muted);">No secondary transfer records found. Asset remains with original minter.</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

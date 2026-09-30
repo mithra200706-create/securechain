@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Identity Management (DID){% endblock %}
+{% block header_title %}Decentralized Identity Management (DID){% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.2rem; font-weight: 600; color: #fff;">Registered Decentralized Identities</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Self-Sovereign Identity (SSI) registry with simulated cryptographic DID resolution.</p>
+    </div>
+    
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <input type="text" class="form-control" placeholder="Search identities..." data-table-search="identities-table" style="width: 220px;">
+      <button class="btn btn-primary" onclick="openModal('create-did-modal')">
+        <i class="fas fa-plus-circle"></i> Create DID
+      </button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table" id="identities-table">
+      <thead>
+        <tr>
+          <th>Identity / Name</th>
+          <th>Decentralized Identifier (DID)</th>
+          <th>Organization</th>
+          <th>Role</th>
+          <th>Verification Status</th>
+          <th>Created Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for iden in identities %}
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="user-avatar" style="width: 36px; height: 36px;">{{ iden.full_name[0] }}</div>
+              <div>
+                <strong style="color: #fff;">{{ iden.full_name }}</strong><br>
+                <small style="color: var(--text-muted);">{{ iden.email }}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <code class="font-mono" style="color: var(--primary-cyan); font-size: 0.82rem; background: rgba(6,182,212,0.1); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(6,182,212,0.2);">
+              {{ iden.did }}
+            </code>
+          </td>
+          <td>{{ iden.organization }}</td>
+          <td><span class="badge badge-secondary" style="border: 1px solid var(--border-color);">{{ iden.role }}</span></td>
+          <td>
+            {% if iden.status == 'VERIFIED' %}
+              <span class="badge badge-verified"><i class="fas fa-check-circle"></i> VERIFIED</span>
+            {% elif iden.status == 'PENDING' %}
+              <span class="badge badge-pending"><i class="fas fa-clock"></i> PENDING</span>
+            {% else %}
+              <span class="badge badge-danger"><i class="fas fa-ban"></i> REVOKED</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 0.8rem; color: var(--text-muted);">{{ iden.created_at[:10] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Create DID -->
+<div class="modal-backdrop" id="create-did-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-id-card" style="color: var(--primary-cyan);"></i> Issue New Decentralized Identity</h3>
+      <button class="modal-close" onclick="closeModal('create-did-modal')">&times;</button>
+    </div>
+    
+    <form action="{{ url_for('create_identity') }}" method="POST">
+      <div class="modal-body">
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Generates a simulated <code>did:securechain:hash</code> identifier and registers it to the ledger.
+        </p>
+
+        <div class="form-group">
+          <label for="full_name">Full Name</label>
+          <input type="text" id="full_name" name="full_name" class="form-control" placeholder="e.g. Dr. Aris Thorne" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Corporate / Org Email</label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="e.g. aris@securechain.io" required>
+        </div>
+
+        <div class="form-group">
+          <label for="organization">Organization / Department</label>
+          <input type="text" id="organization" name="organization" class="form-control" placeholder="e.g. Cyber Security Directorate" required>
+        </div>
+
+        <div class="form-group">
+          <label for="role">Assigned Role</label>
+          <select id="role" name="role" class="form-select">
+            <option value="User">User</option>
+            <option value="Manager">Manager</option>
+            <option value="Auditor">Auditor</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="padding: 1rem 1.5rem; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('create-did-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-wand-magic-sparkles"></i> Generate DID</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

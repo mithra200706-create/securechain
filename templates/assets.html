@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Asset Registry (NFTs){% endblock %}
+{% block header_title %}NFT Digital Asset Registry{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.2rem; font-weight: 600; color: #fff;">Registered Digital Assets & Tokens</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">NFT-style cryptographic asset ownership ledger and tokenization platform.</p>
+    </div>
+    
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <button class="btn btn-primary" onclick="openModal('mint-asset-modal')">
+        <i class="fas fa-hammer"></i> Mint New Asset (NFT)
+      </button>
+    </div>
+  </div>
+
+  <!-- NFT Card Gallery Grid -->
+  <div class="nft-grid">
+    {% for asset in assets %}
+    <div class="nft-card">
+      <div class="nft-header">
+        <span class="nft-badge">{{ asset.asset_type }}</span>
+        <span class="font-mono" style="font-size: 0.78rem; color: var(--primary-cyan); font-weight: 700;">{{ asset.nft_id }}</span>
+      </div>
+
+      <div class="nft-body">
+        <h3 class="nft-title">{{ asset.name }}</h3>
+        <p class="nft-desc">{{ asset.description or 'No description provided.' }}</p>
+
+        <div style="font-size: 0.8rem; margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span style="color: var(--text-muted);">Current Owner:</span>
+            <strong style="color: #fff;">{{ asset.current_owner }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Ref Code:</span>
+            <span class="font-mono" style="color: var(--text-dim);">{{ asset.value_ref }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nft-footer">
+        <span style="font-size: 0.72rem; color: var(--text-muted);">Tx Hash:</span>
+        <code class="font-mono" style="font-size: 0.72rem; color: #38bdf8;">{{ asset.tx_hash[:16] }}...</code>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Asset Table View -->
+<div class="glass-card" style="margin-top: 1.5rem;">
+  <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">Detailed Asset Records Table</h3>
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>NFT Asset ID</th>
+          <th>Asset Name</th>
+          <th>Type</th>
+          <th>Current Owner</th>
+          <th>Transaction Hash</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for asset in assets %}
+        <tr>
+          <td><span class="font-mono" style="color: var(--primary-cyan); font-weight: 600;">{{ asset.nft_id }}</span></td>
+          <td><strong>{{ asset.name }}</strong></td>
+          <td><span class="badge badge-cyan">{{ asset.asset_type }}</span></td>
+          <td>{{ asset.current_owner }}</td>
+          <td><code class="font-mono" style="font-size: 0.78rem;">{{ asset.tx_hash[:18] }}...</code></td>
+          <td style="font-size: 0.8rem; color: var(--text-muted);">{{ asset.created_at[:10] }}</td>
+          <td>
+            <a href="{{ url_for('ownership') }}?nft_id={{ asset.nft_id }}" class="btn btn-secondary btn-sm">
+              <i class="fas fa-timeline"></i> History
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Mint Asset -->
+<div class="modal-backdrop" id="mint-asset-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fas fa-gem" style="color: var(--primary-cyan);"></i> Mint NFT Digital Asset</h3>
+      <button class="modal-close" onclick="closeModal('mint-asset-modal')">&times;</button>
+    </div>
+    
+    <form action="{{ url_for('mint_asset') }}" method="POST">
+      <div class="modal-body">
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Mints a simulated NFT token with an auto-generated unique Asset ID and transaction hash.
+        </p>
+
+        <div class="form-group">
+          <label for="name">Asset Name</label>
+          <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Encrypted Vault Key Contract" required>
+        </div>
+
+        <div class="form-group">
+          <label for="asset_type">Asset Type</label>
+          <select id="asset_type" name="asset_type" class="form-select">
+            <option value="Digital Document">Digital Document</option>
+            <option value="Equipment">Equipment</option>
+            <option value="Certificate">Certificate</option>
+            <option value="License">License</option>
+            <option value="Government Record">Government Record</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="owner">Initial Owner Name</label>
+          <input type="text" id="owner" name="owner" class="form-control" value="{{ current_full_name or current_user }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="value_ref">Value / Reference Code</label>
+          <input type="text" id="value_ref" name="value_ref" class="form-control" placeholder="e.g. REF-2026-SEC-99">
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" class="form-control" rows="3" placeholder="Enter asset specifications..."></textarea>
+        </div>
+      </div>
+
+      <div style="padding: 1rem 1.5rem; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('mint-asset-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-hammer"></i> Mint NFT Token</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+{% block header_title %}System Administration & Role Governance{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="border-color: rgba(239, 68, 68, 0.3);">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff;">
+        <i class="fas fa-user-gear" style="color: #ef4444;"></i> Super Admin Controls
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Manage global identities, assign user RBAC roles, oversee asset registry, and verify system integrity.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="{{ url_for('verify_audit') }}" class="btn btn-primary">
+        <i class="fas fa-shield-check"></i> Re-Verify Audit Hash Chain
+      </a>
+    </div>
+  </div>
+
+  <!-- Role Assignment Form Box -->
+  <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
+    <h3 style="font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">
+      <i class="fas fa-user-shield" style="color: var(--primary-cyan);"></i> Assign / Modify User Role
+    </h3>
+
+    <form action="{{ url_for('assign_role') }}" method="POST" style="display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 1rem; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="user_id">Select User</label>
+        <select id="user_id" name="user_id" class="form-select" required>
+          {% for u in users %}
+          <option value="{{ u.id }}">{{ u.username }} ({{ u.full_name }}) — Current Role: {{ u.role }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="new_role">New Target Role</label>
+        <select id="new_role" name="new_role" class="form-select" required>
+          <option value="Admin">Admin</option>
+          <option value="Manager">Manager</option>
+          <option value="Auditor">Auditor</option>
+          <option value="User">User</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure you want to change this user\'s access permissions?');">
+        <i class="fas fa-arrows-rotate"></i> Update Role
+      </button>
+    </form>
+  </div>
+
+  <!-- Users Directory Table -->
+  <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">System User Directory</h3>
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>#{{ u.id }}</td>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>{{ u.full_name }}</td>
+          <td style="color: var(--text-muted);">{{ u.email }}</td>
+          <td>
+            {% if u.role == 'Admin' %}
+              <span class="badge badge-danger">Admin</span>
+            {% elif u.role == 'Manager' %}
+              <span class="badge badge-warning">Manager</span>
+            {% elif u.role == 'Auditor' %}
+              <span class="badge badge-cyan">Auditor</span>
+            {% else %}
+              <span class="badge badge-secondary" style="border: 1px solid var(--border-color);">User</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 0.8rem; color: var(--text-muted);">{{ u.created_at[:10] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

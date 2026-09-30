@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block header_title %}Security & Network Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Cards Grid -->
+<div class="grid-4">
+  <div class="glass-card stat-card">
+    <div class="stat-info">
+      <h3>Total Identities</h3>
+      <div class="stat-value">{{ identities_count }}</div>
+      <span class="badge badge-verified" style="margin-top: 0.5rem;"><i class="fas fa-check-double"></i> DIDs Issued</span>
+    </div>
+    <div class="stat-icon">
+      <i class="fas fa-id-badge"></i>
+    </div>
+  </div>
+
+  <div class="glass-card stat-card">
+    <div class="stat-info">
+      <h3>Registered Assets</h3>
+      <div class="stat-value">{{ assets_count }}</div>
+      <span class="badge badge-active" style="margin-top: 0.5rem;"><i class="fas fa-gem"></i> NFT Tokens</span>
+    </div>
+    <div class="stat-icon">
+      <i class="fas fa-cubes"></i>
+    </div>
+  </div>
+
+  <div class="glass-card stat-card">
+    <div class="stat-info">
+      <h3>Active Roles</h3>
+      <div class="stat-value">{{ roles_count }}</div>
+      <span class="badge badge-cyan" style="margin-top: 0.5rem;"><i class="fas fa-user-lock"></i> RBAC Matrix</span>
+    </div>
+    <div class="stat-icon">
+      <i class="fas fa-user-shield"></i>
+    </div>
+  </div>
+
+  <div class="glass-card stat-card">
+    <div class="stat-info">
+      <h3>Audit Events</h3>
+      <div class="stat-value">{{ audit_count }}</div>
+      <span class="badge badge-verified" style="margin-top: 0.5rem;"><i class="fas fa-link"></i> SHA-256 Chain</span>
+    </div>
+    <div class="stat-icon">
+      <i class="fas fa-list-check"></i>
+    </div>
+  </div>
+</div>
+
+<!-- System Status Indicators -->
+<div class="glass-card" style="padding: 1.25rem;">
+  <h3 style="font-size: 0.95rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem;">
+    <i class="fas fa-network-wired"></i> Core Security & Network Status
+  </h3>
+  <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.88rem; color: #fff;">Blockchain Network:</span>
+      <span class="badge badge-active"><i class="fas fa-circle-dot"></i> ACTIVE</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.88rem; color: #fff;">Identity Layer:</span>
+      <span class="badge badge-verified"><i class="fas fa-shield"></i> VERIFIED</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.88rem; color: #fff;">Audit Trail Integrity:</span>
+      <span class="badge badge-verified"><i class="fas fa-lock"></i> SECURE</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.88rem; color: #fff;">Access Control:</span>
+      <span class="badge badge-cyan"><i class="fas fa-user-check"></i> ENFORCED</span>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid-2">
+  <div class="glass-card">
+    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #fff;">
+      <i class="fas fa-chart-pie" style="color: var(--primary-cyan);"></i> Assets Distribution by Category
+    </h3>
+    <div style="height: 250px; position: relative;">
+      <canvas id="categoryChart"></canvas>
+    </div>
+  </div>
+
+  <div class="glass-card">
+    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #fff;">
+      <i class="fas fa-chart-line" style="color: var(--accent-blue);"></i> Security & Access Activity Timeline
+    </h3>
+    <div style="height: 250px; position: relative;">
+      <canvas id="activityChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Tables Grid -->
+<div class="grid-2">
+  <!-- Recent Audit Logs -->
+  <div class="glass-card">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+      <h3 style="font-size: 1rem; font-weight: 600; color: #fff;">
+        <i class="fas fa-list"></i> Recent Audit Events
+      </h3>
+      <a href="{{ url_for('audit') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-responsive">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in recent_activity %}
+          <tr>
+            <td style="font-size: 0.78rem; color: var(--text-muted);">{{ event.timestamp[11:19] }}</td>
+            <td><strong>{{ event.user }}</strong></td>
+            <td><span class="font-mono" style="font-size: 0.8rem;">{{ event.action }}</span></td>
+            <td>
+              {% if event.status == 'SUCCESS' %}
+                <span class="badge badge-success">SUCCESS</span>
+              {% else %}
+                <span class="badge badge-danger">DENIED</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Asset Transactions -->
+  <div class="glass-card">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+      <h3 style="font-size: 1rem; font-weight: 600; color: #fff;">
+        <i class="fas fa-gem"></i> Recent Registered Assets
+      </h3>
+      <a href="{{ url_for('assets') }}" class="btn btn-secondary btn-sm">Asset Registry</a>
+    </div>
+    <div class="table-responsive">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Asset ID</th>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asset in recent_assets %}
+          <tr>
+            <td><span class="font-mono text-cyan" style="color: var(--primary-cyan);">{{ asset.nft_id }}</span></td>
+            <td><strong>{{ asset.name }}</strong></td>
+            <td style="font-size: 0.82rem;">{{ asset.current_owner }}</td>
+            <td><span class="badge badge-cyan">{{ asset.asset_type }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Assets Category Chart
+    const catCtx = document.getElementById('categoryChart').getContext('2d');
+    const categories = {{ categories | tojson }};
+    const categoryCounts = {{ category_counts | tojson }};
+
+    new Chart(catCtx, {
+      type: 'doughnut',
+      data: {
+        labels: categories,
+        datasets: [{
+          data: categoryCounts,
+          backgroundColor: [
+            '#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
+          ],
+          borderColor: '#0f172a',
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#94a3b8', font: { family: 'Outfit', size: 12 } }
+          }
+        }
+      }
+    });
+
+    // 2. Activity Line Chart
+    const actCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(actCtx, {
+      type: 'line',
+      data: {
+        labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+        datasets: [{
+          label: 'Security & Access Logs',
+          data: [3, 8, 14, 12, 19, 22, {{ audit_count }}],
+          borderColor: '#00f2fe',
+          backgroundColor: 'rgba(0, 242, 254, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#94a3b8' } }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}
